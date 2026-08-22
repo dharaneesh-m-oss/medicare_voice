@@ -1,0 +1,767 @@
+/* ============================================================
+   DESIGN SYSTEM v2 — soft wellness, light-first
+   ============================================================
+   Loaded last on purpose: it redefines the token layer for the whole app.
+   Order inside this file matters — :root (light), then dark, then high
+   contrast — because they share specificity and the last match wins.
+
+   Reference direction: a calm telehealth/wellness app. Near-white canvas with
+   a faint violet cast, white cards on generous radii, one lavender accent, and
+   pastel tints that give each tracked metric its own identity.
+
+   Contrast rule carried over: tints and hues are for SURFACES and GRAPHICS.
+   Every number and label sits on --text or --text-muted, so colour never
+   carries the contrast burden.
+   ============================================================ */
+
+:root {
+  /* --- canvas --- */
+  --bg: #eeecf6;
+  --surface: #ffffff;
+  --surface-alt: #f7f6fb;
+  --surface-raised: #ffffff;
+  --border: #eae8f2;
+  --border-strong: #c9c5dd;
+
+  /* --- type --- */
+  --text: #1a1930;
+  /* Darkened from #6b6a85: on the lilac metric tint that only reached 4.44,
+     which is under AA for body text. This holds 5.6:1 on every tint. */
+  --text-muted: #5c5a75;
+  --text-invert: #ffffff;
+
+  /* --- accent ---
+     #6a57e8 rather than the lighter #7c6bf0 for anything carrying white text:
+     it holds 5.1:1 against white, so button labels clear AA at every size. */
+  --primary: #6a57e8;
+  --primary-dark: #5645c9;
+  --primary-bright: #7c6bf0;
+  --primary-soft: #efeafe;
+  /* Lavender as TEXT needs to be darker than lavender as a FILL. #6a57e8 on
+     the soft lilac reaches only 4.3:1; this ink holds 5.4:1 there and 6.3:1
+     on white, so the accent stays vivid where it is a shape and stays legible
+     where it is a word. */
+  --primary-ink: #5b48d6;
+
+  /* --- status --- */
+  --success: #2e9e6b;
+  --success-soft: #e7f6ef;
+  --warn: #a86a12;
+  --warn-soft: #fdeee0;
+  --danger: #d13b53;
+  --danger-soft: #fdeaee;
+  --info-soft: #f0eff7;
+  --violet: #6a57e8;
+  --violet-soft: #efeafe;
+
+  /* --- metric hues + their pastel tints --- */
+  --move: #e2643c;
+  --move-soft: #fdeee6;
+  --sleep: #6e5de7;
+  --sleep-soft: #efeafe;
+  --water: #2079c9;
+  --water-soft: #e8f1fd;
+  --mood: #cc3d80;
+  --mood-soft: #fce9f1;
+  --meds: #2e9e6b;
+  --meds-soft: #e7f6ef;
+
+  /* --- shape + depth: wide radii, shadow instead of borders --- */
+  --radius: 18px;
+  --radius-lg: 28px;
+  --shadow: 0 1px 2px rgba(26, 25, 48, 0.04), 0 10px 28px rgba(26, 25, 48, 0.07);
+  --shadow-lg: 0 2px 6px rgba(26, 25, 48, 0.06), 0 22px 48px rgba(26, 25, 48, 0.13);
+}
+
+/* --- dark, for anyone who wants it --- */
+:root[data-theme='dark'] {
+  --bg: #06090d;
+  --surface: #161d26;
+  --surface-alt: #0b1016;
+  --surface-raised: #1d2631;
+  --border: #232c37;
+  --border-strong: #3a4552;
+
+  --text: #eef2f7;
+  --text-muted: #93a1b1;
+  --text-invert: #0b0720;
+
+  --primary: #a394ff;
+  --primary-dark: #8878f5;
+  --primary-bright: #bcb0ff;
+  --primary-soft: rgba(163, 148, 255, 0.16);
+  /* On a dark canvas the bright accent is already the legible one. */
+  --primary-ink: #a394ff;
+
+  --success: #3ddc97;
+  --success-soft: rgba(61, 220, 151, 0.14);
+  --warn: #ffb648;
+  --warn-soft: rgba(255, 182, 72, 0.14);
+  --danger: #ff6b7a;
+  --danger-soft: rgba(255, 107, 122, 0.14);
+  --info-soft: rgba(147, 161, 177, 0.1);
+  --violet: #a394ff;
+  --violet-soft: rgba(163, 148, 255, 0.16);
+
+  --move: #ff8a4c;
+  --move-soft: rgba(255, 138, 76, 0.16);
+  --sleep: #9b8cff;
+  --sleep-soft: rgba(155, 140, 255, 0.16);
+  --water: #3ddbf0;
+  --water-soft: rgba(61, 219, 240, 0.16);
+  --mood: #ff6fae;
+  --mood-soft: rgba(255, 111, 174, 0.16);
+  --meds: #3ddc97;
+  --meds-soft: rgba(61, 220, 151, 0.16);
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 2px 8px rgba(0, 0, 0, 0.45), 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+/* --- high contrast overrides both --- */
+:root[data-contrast='high'] {
+  --bg: #000000;
+  --surface: #0b0b0b;
+  --surface-alt: #000000;
+  --surface-raised: #151515;
+  --border: #6f6f6f;
+  --border-strong: #ffffff;
+  --text: #ffffff;
+  --text-muted: #e6e6e6;
+  --text-invert: #000000;
+  --primary: #ffd400;
+  --primary-dark: #ffe873;
+  --primary-bright: #ffe873;
+  --primary-soft: #241f00;
+  --primary-ink: #ffd400;
+  --success: #4ade80;
+  --success-soft: #06240f;
+  --warn: #fbbf24;
+  --warn-soft: #241a00;
+  --danger: #ff6b6b;
+  --danger-soft: #2a0708;
+  --info-soft: #10161f;
+  --violet: #c4b5fd;
+  --violet-soft: #16112b;
+  --move: #fb923c;
+  --move-soft: #2a1608;
+  --sleep: #a5b4fc;
+  --sleep-soft: #14142e;
+  --water: #67e8f9;
+  --water-soft: #052630;
+  --mood: #f9a8d4;
+  --mood-soft: #2b0c1c;
+  --meds: #6ee7b7;
+  --meds-soft: #04241a;
+  --shadow: none;
+  --shadow-lg: none;
+}
+
+/* ------------------------------------------------------------------
+   Surfaces — depth from shadow, not from outlines
+   ------------------------------------------------------------------ */
+
+.app-shell {
+  background: var(--bg);
+}
+
+:root:not([data-contrast='high']) .app-shell {
+  background:
+    radial-gradient(80% 50% at 50% 0%, rgba(124, 107, 240, 0.16), transparent 65%),
+    var(--bg);
+}
+
+.phone,
+.workspace {
+  background: var(--surface-alt);
+}
+
+.page,
+.screen-body {
+  background: var(--surface-alt);
+  padding: 14px 18px 28px;
+  gap: 18px;
+}
+
+.card,
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+.panel-head {
+  background: transparent;
+  border-bottom-color: var(--border);
+}
+
+.panel-head h3 {
+  font-size: 0.86em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.stat,
+.insight,
+.notice,
+.dose,
+.row-item,
+.sample {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+.row-item:hover {
+  background: var(--surface-alt);
+}
+
+.card-flat {
+  background: var(--surface-alt);
+  box-shadow: none;
+}
+
+/* ------------------------------------------------------------------
+   Navigation
+   ------------------------------------------------------------------ */
+
+.topbar,
+.screen-header {
+  background: color-mix(in srgb, var(--surface-alt) 78%, transparent);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  color: var(--text);
+  border-bottom: 1px solid transparent;
+  transition:
+    border-color var(--dur) var(--ease-out),
+    background-color var(--dur) var(--ease-out);
+}
+
+/* The separator appears only once content has scrolled under the bar. */
+.topbar[data-scrolled='true'],
+.screen-header[data-scrolled='true'] {
+  background: color-mix(in srgb, var(--surface-alt) 94%, transparent);
+  border-bottom-color: var(--border);
+}
+
+:root[data-contrast='high'] .topbar,
+:root[data-contrast='high'] .screen-header {
+  background: var(--surface);
+  border-bottom: 2px solid var(--border-strong);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.screen-header h1 {
+  font-size: 1.05em;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.header-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+
+.avatar {
+  background: var(--primary-soft);
+  color: var(--primary-ink);
+  border: 1px solid var(--border);
+}
+
+.avatar-plain {
+  background: var(--surface-alt);
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+
+.brand-mark {
+  background: var(--primary);
+  color: var(--text-invert);
+}
+
+.tabbar {
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  border-top: 1px solid var(--border);
+  position: relative;
+  padding-top: 8px;
+}
+
+.tabbar-item[aria-current='true'] {
+  color: var(--primary-ink);
+  background: transparent;
+}
+
+/* --- the raised centre action --- */
+
+.tab-slot {
+  flex: 0 0 76px;
+}
+
+.tab-fab {
+  position: absolute;
+  left: 50%;
+  top: -24px;
+  transform: translateX(-50%);
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  border: 4px solid var(--surface-alt);
+  background: linear-gradient(140deg, var(--primary-bright) 0%, var(--primary-dark) 100%);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 10px 22px rgba(106, 87, 232, 0.4);
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur) var(--ease-out);
+  z-index: 2;
+}
+
+.tab-fab:active {
+  transform: translateX(-50%) scale(0.93);
+}
+
+:root[data-contrast='high'] .tab-fab {
+  background: var(--primary);
+  color: var(--text-invert);
+  border-color: var(--border-strong);
+  box-shadow: none;
+}
+
+.rail {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+}
+
+.rail-item[aria-current='true'] {
+  background: var(--primary-soft);
+  color: var(--primary-ink);
+}
+
+/* ------------------------------------------------------------------
+   Typography
+   ------------------------------------------------------------------ */
+
+.big-value,
+.stat-value,
+.metric-value,
+.rings-score,
+.legend-value,
+.ring-value {
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.section-title,
+.detail-label,
+.stat-label,
+.metric-label,
+.legend-key {
+  color: var(--text-muted);
+}
+
+.large-title {
+  font-size: 2em;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  margin: 2px 0 0;
+}
+
+.large-title-sub {
+  color: var(--text-muted);
+  font-size: 0.8em;
+  margin-top: 4px;
+}
+
+/* ------------------------------------------------------------------
+   Controls — pill buttons, soft fields
+   ------------------------------------------------------------------ */
+
+.btn {
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--text-invert);
+  border-color: transparent;
+  box-shadow: 0 8px 18px rgba(106, 87, 232, 0.26);
+}
+
+:root[data-theme='dark'] .btn-primary,
+:root[data-contrast='high'] .btn-primary {
+  box-shadow: none;
+}
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--primary-ink);
+  border-color: var(--border);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+
+.btn-success {
+  background: var(--success);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+:root[data-contrast='high'] .btn-success {
+  color: var(--text-invert);
+}
+
+.btn-danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: transparent;
+}
+
+.input,
+.select,
+.textarea,
+.search-input {
+  background: var(--surface-alt);
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  color: var(--text);
+}
+
+.option,
+.slot,
+.day-chip,
+.tab,
+.scale button,
+.mood-strip button {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  border-radius: 16px;
+}
+
+.option,
+.chip {
+  border-radius: 999px;
+}
+
+.option[aria-pressed='true'],
+.slot[aria-pressed='true'],
+.day-chip[aria-pressed='true'],
+.tab[aria-selected='true'] {
+  background: var(--primary);
+  border-color: transparent;
+  color: var(--text-invert);
+}
+
+.scale button[aria-pressed='true'],
+.mood-strip button[aria-pressed='true'] {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary-ink);
+}
+
+.segmented {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.segmented button {
+  border-radius: 999px;
+}
+
+.segmented button[aria-pressed='true'] {
+  background: var(--primary);
+  color: var(--text-invert);
+  box-shadow: none;
+}
+
+.switch {
+  background: var(--surface-alt);
+  border-color: var(--border-strong);
+}
+
+.switch::after {
+  background: var(--text-muted);
+  border: none;
+}
+
+.switch[aria-checked='true'] {
+  background: var(--primary);
+  border-color: transparent;
+}
+
+.switch[aria-checked='true']::after {
+  background: #ffffff;
+}
+
+.chip {
+  background: var(--surface-alt);
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+
+.tile {
+  background: var(--surface);
+  border-color: var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.tile-primary {
+  background: linear-gradient(140deg, var(--primary-bright) 0%, var(--primary-dark) 100%);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+:root[data-contrast='high'] .tile-primary {
+  background: var(--primary);
+  color: var(--text-invert);
+}
+
+.tile-icon {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-radius: 16px;
+}
+
+.tile-primary .tile-icon {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+:root[data-contrast='high'] .tile-primary .tile-icon {
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--text-invert);
+}
+
+/* ------------------------------------------------------------------
+   Wellbeing surfaces
+   ------------------------------------------------------------------ */
+
+/* The hero is a white card here, not a dark panel: the lavender ring and the
+   numeral carry it, and the page stays airy. */
+.rings-hero {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+
+.rings-hero::before {
+  display: none;
+}
+
+:root[data-theme='dark'] .rings-hero {
+  background:
+    radial-gradient(120% 90% at 15% 0%, rgba(163, 148, 255, 0.22) 0%, transparent 60%),
+    var(--surface);
+}
+
+.rings-legend {
+  border-top-color: var(--border);
+}
+
+.rings-trend {
+  background: var(--primary-soft);
+  border: 1px solid transparent;
+  color: var(--primary-ink);
+}
+
+/* Metric cards wear their metric's tint. */
+.metric-card {
+  border: 1px solid transparent;
+  box-shadow: none;
+  border-radius: var(--radius-lg);
+}
+
+.metric-icon {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.66);
+}
+
+:root[data-theme='dark'] .metric-icon,
+:root[data-contrast='high'] .metric-icon {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.metric-track,
+.meter,
+.pillar-track,
+.week-bar {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: transparent;
+}
+
+:root[data-theme='dark'] .metric-track,
+:root[data-theme='dark'] .meter,
+:root[data-theme='dark'] .pillar-track,
+:root[data-theme='dark'] .week-bar,
+:root[data-contrast='high'] .metric-track,
+:root[data-contrast='high'] .meter,
+:root[data-contrast='high'] .pillar-track,
+:root[data-contrast='high'] .week-bar {
+  background: var(--surface-raised);
+  border-color: var(--border);
+}
+
+/* ------------------------------------------------------------------
+   Tables, rows, timeline
+   ------------------------------------------------------------------ */
+
+table.data th {
+  background: var(--surface-alt);
+  border-bottom-color: var(--border);
+  color: var(--text-muted);
+}
+
+table.data td {
+  border-bottom-color: var(--border);
+}
+
+table.data tbody tr:hover {
+  background: var(--surface-alt);
+}
+
+.timeline-item::before {
+  background: var(--border);
+}
+
+.timeline-dot {
+  background: var(--surface);
+  border-color: var(--primary);
+}
+
+/* ------------------------------------------------------------------
+   Welcome screen
+   ------------------------------------------------------------------ */
+
+.splash {
+  background:
+    radial-gradient(90% 50% at 50% 0%, rgba(124, 107, 240, 0.28), transparent 62%),
+    linear-gradient(180deg, #f7f6fb 0%, #eeecf6 100%);
+  color: var(--text);
+}
+
+:root[data-theme='dark'] .splash {
+  background:
+    radial-gradient(100% 60% at 50% 0%, rgba(163, 148, 255, 0.2), transparent 62%),
+    linear-gradient(180deg, #0b1219 0%, #06090d 100%);
+}
+
+.splash-logo {
+  background: var(--primary);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 14px 30px rgba(106, 87, 232, 0.35);
+}
+
+.splash h1 {
+  letter-spacing: -0.03em;
+}
+
+.splash p {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+.splash .options .option {
+  background: var(--surface);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.splash .options .option[aria-pressed='true'] {
+  background: var(--primary);
+  border-color: transparent;
+  color: var(--text-invert);
+}
+
+.splash .footnote {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+/* ------------------------------------------------------------------
+   Sheet modals
+   ------------------------------------------------------------------ */
+
+.overlay {
+  background: rgba(26, 25, 48, 0.42);
+  align-items: flex-end;
+  padding: 0;
+}
+
+.modal {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  border: none;
+  border-radius: 30px 30px 0 0;
+  background: var(--surface);
+  padding: 10px 20px calc(24px + env(safe-area-inset-bottom, 0px));
+  max-height: 88%;
+}
+
+/* The grabber says which way the sheet moves before you touch it. */
+.modal::before {
+  content: '';
+  display: block;
+  width: 42px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--border-strong);
+  margin: 0 auto 14px;
+  flex: 0 0 auto;
+}
+
+.modal-title {
+  font-size: 1.25em;
+  letter-spacing: -0.02em;
+}
+
+.toast {
+  background: var(--text);
+  color: var(--surface);
+  border: none;
+  box-shadow: var(--shadow-lg);
+}
+
+/* ------------------------------------------------------------------
+   Media
+   ------------------------------------------------------------------ */
+
+.viewfinder {
+  background: #1a1930;
+  border: none;
+  border-radius: var(--radius-lg);
+}
+
+.bell-dot {
+  border-color: var(--surface-alt);
+}
+
+.empty {
+  color: var(--text-muted);
+}
+
+/* Accent-as-text carried through to the base stylesheets' rules. */
+.link-button,
+.dose-time,
+.chip-primary,
+.tile-icon,
+.stage-active {
+  color: var(--primary-ink);
+}

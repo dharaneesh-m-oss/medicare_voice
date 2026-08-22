@@ -15,6 +15,8 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  /* The curve iOS uses to settle a pushed screen: fast out, long soft tail. */
+  --ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
 
   --dur-fast: 130ms;
   --dur: 260ms;
@@ -34,21 +36,22 @@
 @keyframes mv-push-forward {
   from {
     opacity: 0;
-    transform: translate3d(26px, 0, 0);
+    transform: translate3d(42px, 0, 0);
   }
 }
 
 @keyframes mv-push-back {
   from {
     opacity: 0;
-    transform: translate3d(-26px, 0, 0);
+    transform: translate3d(-42px, 0, 0);
   }
 }
 
+/* Switching tabs is a cut, not a journey: no direction, just a settle. */
 @keyframes mv-switch {
   from {
     opacity: 0;
-    transform: translate3d(0, 10px, 0) scale(0.994);
+    transform: scale(0.985);
   }
 }
 
@@ -60,8 +63,7 @@
 
 @keyframes mv-sheet {
   from {
-    opacity: 0;
-    transform: translate3d(0, 28px, 0) scale(0.97);
+    transform: translate3d(0, 100%, 0);
   }
 }
 
@@ -118,16 +120,18 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  animation: mv-switch var(--dur) var(--ease-out) backwards;
+  animation: mv-switch var(--dur) var(--ease-ios) backwards;
   will-change: transform, opacity;
 }
 
 .screen-transition[data-dir='forward'] {
   animation-name: mv-push-forward;
+  animation-duration: var(--dur-slow);
 }
 
 .screen-transition[data-dir='back'] {
   animation-name: mv-push-back;
+  animation-duration: var(--dur-slow);
 }
 
 /* The base layer's own fade would double up with this one. */
@@ -299,7 +303,7 @@
 }
 
 .modal {
-  animation: mv-sheet var(--dur-slow) var(--ease-spring) backwards;
+  animation: mv-sheet var(--dur-slow) var(--ease-ios) backwards;
 }
 
 .toast {

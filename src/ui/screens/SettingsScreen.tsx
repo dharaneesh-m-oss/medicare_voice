@@ -5,7 +5,7 @@ import { useSpeech } from '../../app/useSpeech';
 import { LANGUAGES } from '../../core/i18n';
 import { getOcrEngine } from '../../core/ocr';
 import { getRecognitionEngine } from '../../core/recognition';
-import type { LanguageCode } from '../../core/types';
+import type { LanguageCode, ThemeName } from '../../core/types';
 import { Screen } from '../components/Screen';
 import { Modal, OptionGroup, SafetyNote, ToggleRow } from '../components/common';
 
@@ -33,6 +33,15 @@ export function SettingsScreen() {
 
       <div className="card">
         <h2 className="section-title">{t('settings.display')}</h2>
+        <OptionGroup
+          label={t('settings.theme')}
+          value={settings.theme}
+          onChange={(value) => patchSettings({ theme: value as ThemeName })}
+          options={[
+            { value: 'dark', label: t('settings.theme_dark') },
+            { value: 'light', label: t('settings.theme_light') },
+          ]}
+        />
         <ToggleRow
           label={t('settings.text_size')}
           checked={settings.textScale > 1}

@@ -6,7 +6,7 @@ import { RemindersProvider } from './app/Reminders';
 import type { Role } from './core/auth/types';
 import { ReminderOverlay } from './ui/components/ReminderOverlay';
 import { Icon } from './ui/components/Icon';
-import { Avatar, Rail, TabBar, TopBar, type NavItem } from './ui/components/kit';
+import { Avatar, Rail, TabBar, TopBar, type CentreAction, type NavItem } from './ui/components/kit';
 
 /* screens — shared */
 import { AddMedicineScreen } from './ui/screens/AddMedicineScreen';
@@ -51,11 +51,12 @@ import { HospitalPatientsScreen } from './ui/screens/hospital/HospitalPatientsSc
 const AUTH_SCREENS: ScreenName[] = ['splash', 'welcome', 'signin', 'signup'];
 
 const NAV: Record<Role, NavItem[]> = {
+  // Four tabs, because the fifth slot is the raised Scan button in the middle.
+  // Doctors stays one tap away from the home screen and the More menu.
   patient: [
     { key: 'home', icon: 'activity', labelKey: 'nav.wellness' },
     { key: 'schedule', icon: 'pills', labelKey: 'nav.medicines' },
     { key: 'appointments', icon: 'calendar', labelKey: 'nav.appointments' },
-    { key: 'doctors', icon: 'stethoscope', labelKey: 'nav.doctors' },
     { key: 'profile', icon: 'user', labelKey: 'nav.more' },
   ],
   doctor: [
@@ -99,15 +100,48 @@ const ALLOWED: Record<Role, ScreenName[]> = {
   ],
 };
 
-/** Applies the accessibility settings to the document root. */
+/** Applies the appearance settings to the document root. */
 function useAccessibilitySettings() {
   const { settings, locale } = useApp();
   useEffect(() => {
     const root = document.documentElement;
     root.style.setProperty('--scale', String(settings.textScale));
+    root.dataset.theme = settings.theme;
     root.dataset.contrast = settings.highContrast ? 'high' : 'normal';
     root.lang = locale;
-  }, [settings.textScale, settings.highContrast, locale]);
+  }, [settings.textScale, settings.highContrast, settings.theme, locale]);
+}
+
+/**
+ * Marks the header once content has scrolled beneath it, so the separator and
+ * the solid background fade in instead of always being there.
+ *
+ * Scroll events do not bubble, so this listens in the CAPTURE phase on the
+ * frame: one listener covers whichever pane the current screen happens to use.
+ */
+function useScrolledHeader(frame: React.RefObject<HTMLDivElement | null>, screen: string) {
+  useEffect(() => {
+    const el = frame.current;
+    if (!el) return;
+
+    const mark = (scrolled: boolean) => {
+      el.querySelectorAll<HTMLElement>('.topbar, .screen-header').forEach((header) => {
+        header.dataset.scrolled = String(scrolled);
+      });
+    };
+
+    const onScroll = (event: Event) => {
+      const target = event.target as HTMLElement | null;
+      if (!target?.classList?.contains('page') && !target?.classList?.contains('screen-body')) {
+        return;
+      }
+      mark(target.scrollTop > 6);
+    };
+
+    mark(false); // a freshly mounted screen starts at the top
+    el.addEventListener('scroll', onScroll, true);
+    return () => el.removeEventListener('scroll', onScroll, true);
+  }, [frame, screen]);
 }
 
 function CurrentScreen({ screen }: { screen: ScreenName }) {
@@ -191,7 +225,9 @@ function CurrentScreen({ screen }: { screen: ScreenName }) {
 function Shell() {
   const { ready, t, session, account, patient, doctor, hospital, unreadNotifications } = useApp();
   const { screen, depth, setRoot, navigate } = useNavigator();
+  const frameRef = useRef<HTMLDivElement>(null);
   useAccessibilitySettings();
+  useScrolledHeader(frameRef, screen);
 
   /* Which way the stack moved, so the incoming screen enters from the right
      side. Derived during render via refs — it must be known on the very frame
@@ -222,6 +258,13 @@ function Shell() {
       setRoot(HOME_FOR[session.role]);
     }
   }, [ready, session, screen, setRoot]);
+
+  /* Scanning a medicine is the app's signature action, so it gets the raised
+     button in the middle of the bar rather than a tab of its own. */
+  const centreAction: CentreAction | undefined =
+    role === 'patient'
+      ? { icon: 'camera', label: t('home.scan'), onPress: () => navigate('scan') }
+      : undefined;
 
   const subtitle = useMemo(() => {
     if (!account) return undefined;
@@ -259,7 +302,7 @@ function Shell() {
 
   return (
     <div className="app-shell">
-      <div className={isPro ? 'workspace' : 'phone'}>
+      <div className={isPro ? 'workspace' : 'phone'} ref={frameRef}>
         {isRoot && account && (
           <TopBar
             title={isPro ? (hospital?.name ?? t('app.name')) : t('app.name')}
@@ -318,6 +361,7 @@ function Shell() {
             items={navItems}
             current={screen}
             onSelect={(key) => setRoot(key as ScreenName)}
+            centre={centreAction}
           />
         )}
 

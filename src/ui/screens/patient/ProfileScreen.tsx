@@ -229,6 +229,12 @@ export function ProfileScreen() {
       {patient && (
         <Panel title={t('nav.more')} flush>
           <RowItem
+            leading={<Icon name="stethoscope" size={26} />}
+            title={t('doctors.title')}
+            sub={t('appointments.book')}
+            onClick={() => navigate('doctors')}
+          />
+          <RowItem
             leading={<Icon name="pills" size={26} />}
             title={t('home.medicines')}
             sub={t('home.medicines_sub')}

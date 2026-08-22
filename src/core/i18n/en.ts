@@ -253,6 +253,10 @@ export const en = {
   'settings.title': 'Settings',
   'settings.language': 'Language',
   'settings.display': 'Display',
+  'settings.theme': 'Appearance',
+  'settings.theme_dark': 'Dark',
+  'settings.theme_light': 'Light',
+
   'settings.text_size': 'Bigger text',
   'settings.contrast': 'High contrast',
   'settings.sound': 'Sound',

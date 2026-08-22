@@ -235,6 +235,10 @@ export const ta: TranslationBundle = {
   'settings.title': 'அமைப்புகள்',
   'settings.language': 'மொழி',
   'settings.display': 'காட்சி',
+  'settings.theme': 'தோற்றம்',
+  'settings.theme_dark': 'இருள்',
+  'settings.theme_light': 'ஒளி',
+
   'settings.text_size': 'பெரிய எழுத்து',
   'settings.contrast': 'அதிக மாறுபாடு',
   'settings.sound': 'ஒலி',

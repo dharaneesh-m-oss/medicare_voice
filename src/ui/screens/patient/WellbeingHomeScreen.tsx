@@ -134,10 +134,15 @@ export function WellbeingHomeScreen() {
 
   return (
     <div className="page">
+      {/* Large title that scrolls away under the blurred nav bar. */}
       <div className="row">
-        <span className="muted">
-          {t(greetingKey)}, {patient?.fullName.split(' ')[0] ?? ''}
-        </span>
+        <div style={{ minWidth: 0 }}>
+          <h1 className="large-title">{t('wellbeing.title')}</h1>
+          <div className="large-title-sub">
+            {t(greetingKey)}, {patient?.fullName.split(' ')[0] ?? ''} ·{' '}
+            {formatDateLong(toISODate(now), locale)}
+          </div>
+        </div>
         <SpeakButton text={spoken} compact />
       </div>
 

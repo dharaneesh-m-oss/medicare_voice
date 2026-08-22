@@ -255,8 +255,12 @@ export interface ScanResult {
 
 export type LanguageCode = 'en' | 'ta' | 'hi';
 
+export type ThemeName = 'dark' | 'light';
+
 export interface Settings {
   language: LanguageCode;
+  /** Light is the default; dark is offered for anyone who prefers it. */
+  theme: ThemeName;
   /** 1 = 20px base, 1.3 = 26px base */
   textScale: number;
   highContrast: boolean;
@@ -269,6 +273,7 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
   language: 'en',
+  theme: 'light',
   textScale: 1,
   highContrast: false,
   voiceEnabled: true,

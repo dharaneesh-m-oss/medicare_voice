@@ -235,6 +235,10 @@ export const hi: TranslationBundle = {
   'settings.title': 'सेटिंग्स',
   'settings.language': 'भाषा',
   'settings.display': 'दिखावट',
+  'settings.theme': 'रूप-रंग',
+  'settings.theme_dark': 'गहरा',
+  'settings.theme_light': 'हल्का',
+
   'settings.text_size': 'बड़े अक्षर',
   'settings.contrast': 'अधिक कंट्रास्ट',
   'settings.sound': 'आवाज़',

@@ -86,30 +86,64 @@ export interface NavItem {
   labelKey: TranslationKey;
 }
 
+export interface CentreAction {
+  icon: IconName;
+  label: string;
+  onPress: () => void;
+}
+
 export function TabBar({
   items,
   current,
   onSelect,
+  centre,
 }: {
   items: NavItem[];
   current: string;
   onSelect: (key: string) => void;
+  /** Raised circular action in the middle of the bar. */
+  centre?: CentreAction;
 }) {
   const { t } = useApp();
+
+  const tab = (item: NavItem) => (
+    <button
+      key={item.key}
+      type="button"
+      className="tabbar-item"
+      aria-current={item.key === current}
+      onClick={() => onSelect(item.key)}
+    >
+      <Icon name={item.icon} size={25} />
+      {t(item.labelKey)}
+    </button>
+  );
+
+  if (!centre) {
+    return (
+      <nav className="tabbar" aria-label="Main">
+        {items.map(tab)}
+      </nav>
+    );
+  }
+
+  // Split the tabs around the raised button, reserving a slot for it so the
+  // two groups stay evenly balanced whatever the label lengths are.
+  const half = Math.ceil(items.length / 2);
+
   return (
     <nav className="tabbar" aria-label="Main">
-      {items.map((item) => (
-        <button
-          key={item.key}
-          type="button"
-          className="tabbar-item"
-          aria-current={item.key === current}
-          onClick={() => onSelect(item.key)}
-        >
-          <Icon name={item.icon} size={26} />
-          {t(item.labelKey)}
-        </button>
-      ))}
+      {items.slice(0, half).map(tab)}
+      <span className="tab-slot" aria-hidden="true" />
+      {items.slice(half).map(tab)}
+      <button
+        type="button"
+        className="tab-fab"
+        onClick={centre.onPress}
+        aria-label={centre.label}
+      >
+        <Icon name={centre.icon} size={28} strokeWidth={2.2} />
+      </button>
     </nav>
   );
 }
@@ -588,9 +622,9 @@ export function MetricCard({
   softColour: string;
 }) {
   return (
-    <div className="metric-card">
+    <div className="metric-card" style={{ background: softColour }}>
       <div className="metric-head">
-        <span className="metric-icon" style={{ background: softColour, color: colour }}>
+        <span className="metric-icon" style={{ color: colour }}>
           <Icon name={icon} size={20} />
         </span>
         <span className="metric-label">{label}</span>
