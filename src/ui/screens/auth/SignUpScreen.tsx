@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 
 import { useApp } from '../../../app/AppState';
 import { useNavigator } from '../../../app/Navigator';
@@ -13,8 +13,7 @@ import {
 } from '../../../core/auth/types';
 import type { TranslationKey } from '../../../core/i18n';
 import { GoogleButton } from '../../components/GoogleButton';
-import { Screen } from '../../components/Screen';
-import { Field, OptionGroup, Tile } from '../../components/common';
+import { Icon, type IconName } from '../../components/Icon';
 
 const GENDERS: Gender[] = ['female', 'male', 'other', 'unspecified'];
 
@@ -23,6 +22,63 @@ function splitList(value: string): string[] {
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+/** A labelled frosted field. */
+function Field({
+  label,
+  children,
+  id,
+}: {
+  label: string;
+  children: ReactNode;
+  id?: string;
+}) {
+  return (
+    <div className="auth-field">
+      <label className="auth-label" htmlFor={id}>
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+function RoleCard({
+  icon,
+  title,
+  sub,
+  selected,
+  onSelect,
+}: {
+  icon: IconName;
+  title: string;
+  sub: string;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="auth-glass-btn"
+      aria-pressed={selected}
+      onClick={onSelect}
+      style={{
+        width: '100%',
+        justifyContent: 'flex-start',
+        minHeight: 84,
+        borderRadius: 24,
+        textAlign: 'left',
+        gap: 14,
+      }}
+    >
+      <Icon name={icon} size={28} />
+      <span style={{ minWidth: 0 }}>
+        <span style={{ display: 'block', fontWeight: 800 }}>{title}</span>
+        <span style={{ display: 'block', fontSize: '0.82em', opacity: 0.82 }}>{sub}</span>
+      </span>
+    </button>
+  );
 }
 
 export function SignUpScreen() {
@@ -139,375 +195,431 @@ export function SignUpScreen() {
   }, [step, role, t]);
 
   return (
-    <Screen title={t('auth.signup')}>
-      <div className="stepper" aria-hidden="true">
-        {Array.from({ length: totalSteps }).map((_, index) => (
-          <span
-            key={index}
-            className="stepper-dot"
-            data-state={index < step ? 'done' : index === step ? 'current' : 'todo'}
-          />
-        ))}
-      </div>
-      <span className="muted">
-        {t('auth.step', { current: step + 1, total: totalSteps })} · {stepTitle}
-      </span>
+    <section className="screen">
+      <div className="auth">
+        <div className="auth-head">
+          <h1 className="auth-title">{t('auth.signup')}</h1>
+          <p className="auth-sub">{stepTitle}</p>
+        </div>
 
-      {/* ---------- step 0: role ---------- */}
-      {step === 0 && (
-        <>
-          <Tile
-            icon="user"
-            label={t('auth.role_patient')}
-            sub={t('auth.role_patient_sub')}
-            primary={role === 'patient'}
-            onClick={() => {
-              setRole('patient');
-              setStep(1);
-            }}
-          />
-          <Tile
-            icon="stethoscope"
-            label={t('auth.role_doctor')}
-            sub={t('auth.role_doctor_sub')}
-            primary={role === 'doctor'}
-            onClick={() => {
-              setRole('doctor');
-              setStep(1);
-            }}
-          />
-          <Tile
-            icon="hospital"
-            label={t('auth.role_admin')}
-            sub={t('auth.role_admin_sub')}
-            primary={role === 'hospital_admin'}
-            onClick={() => {
-              setRole('hospital_admin');
-              setStep(1);
-            }}
-          />
-          <button type="button" className="btn btn-ghost" onClick={goBack}>
-            {t('common.cancel')}
-          </button>
-        </>
-      )}
-
-      {/* ---------- step 1: account ---------- */}
-      {step === 1 && (
-        <>
-          {!usingGoogle && (
-            <>
-              <GoogleButton text="signup_with" onProfile={onGoogle} />
-              <div className="divider-text">{t('auth.or_email')}</div>
-            </>
-          )}
-          {usingGoogle && <div className="banner banner-success">{t('auth.google_new_user')}</div>}
-
-          <Field label={t('auth.full_name')}>
-            <input
-              className="input"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              autoComplete="name"
+        <div className="auth-steps" aria-hidden="true">
+          {Array.from({ length: totalSteps }).map((_, index) => (
+            <span
+              key={index}
+              data-state={index < step ? 'done' : index === step ? 'current' : 'todo'}
             />
-          </Field>
+          ))}
+        </div>
+        <p className="auth-note">{t('auth.step', { current: step + 1, total: totalSteps })}</p>
 
-          <Field label={t('auth.email')}>
-            <input
-              className="input"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              readOnly={usingGoogle}
-              autoComplete="email"
+        {/* ---------- step 0: role ---------- */}
+        {step === 0 && (
+          <>
+            <RoleCard
+              icon="user"
+              title={t('auth.role_patient')}
+              sub={t('auth.role_patient_sub')}
+              selected={role === 'patient'}
+              onSelect={() => {
+                setRole('patient');
+                setStep(1);
+              }}
             />
-          </Field>
-
-          <Field label={t('auth.phone')}>
-            <input
-              className="input"
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              autoComplete="tel"
+            <RoleCard
+              icon="stethoscope"
+              title={t('auth.role_doctor')}
+              sub={t('auth.role_doctor_sub')}
+              selected={role === 'doctor'}
+              onSelect={() => {
+                setRole('doctor');
+                setStep(1);
+              }}
             />
-          </Field>
+            <RoleCard
+              icon="hospital"
+              title={t('auth.role_admin')}
+              sub={t('auth.role_admin_sub')}
+              selected={role === 'hospital_admin'}
+              onSelect={() => {
+                setRole('hospital_admin');
+                setStep(1);
+              }}
+            />
+            <button type="button" className="auth-link" onClick={goBack}>
+              {t('common.cancel')}
+            </button>
+          </>
+        )}
 
-          {!usingGoogle && (
-            <Field label={t('auth.password')}>
+        {/* ---------- step 1: account ---------- */}
+        {step === 1 && (
+          <>
+            {!usingGoogle && (
+              <>
+                <GoogleButton text="signup_with" onProfile={onGoogle} />
+                <div className="auth-divider">{t('auth.or_email')}</div>
+              </>
+            )}
+            {usingGoogle && <div className="auth-card">{t('auth.google_new_user')}</div>}
+
+            <Field label={t('auth.full_name')} id="su-name">
               <input
-                className="input"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="new-password"
+                id="su-name"
+                className="auth-input"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                autoComplete="name"
               />
-              <span className="muted">{t('auth.password_hint')}</span>
             </Field>
-          )}
 
-          {error && <div className="banner banner-danger">{t(error)}</div>}
+            <Field label={t('auth.email')} id="su-email">
+              <input
+                id="su-email"
+                className="auth-input"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                readOnly={usingGoogle}
+                autoComplete="email"
+              />
+            </Field>
 
-          <button
-            type="button"
-            className="btn btn-lg btn-primary"
-            onClick={() => (role === 'hospital_admin' ? void submit() : setStep(2))}
-            disabled={busy}
-          >
-            {role === 'hospital_admin' ? t('auth.create_account') : t('auth.next')}
-          </button>
-          <button type="button" className="btn btn-ghost" onClick={() => setStep(0)}>
-            {t('common.back')}
-          </button>
-        </>
-      )}
+            <Field label={t('auth.phone')} id="su-phone">
+              <input
+                id="su-phone"
+                className="auth-input"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                autoComplete="tel"
+              />
+            </Field>
 
-      {/* ---------- step 2a: patient health ---------- */}
-      {step === 2 && role === 'patient' && (
-        <>
-          <Field label={t('profile.dob')}>
-            <input
-              className="input"
-              type="date"
-              value={dateOfBirth}
-              onChange={(e) => setDateOfBirth(e.target.value)}
-            />
-          </Field>
+            {!usingGoogle && (
+              <Field label={t('auth.password')} id="su-password">
+                <input
+                  id="su-password"
+                  className="auth-input"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
+                />
+                <span className="auth-note" style={{ textAlign: 'left' }}>
+                  {t('auth.password_hint')}
+                </span>
+              </Field>
+            )}
 
-          <OptionGroup
-            label={t('profile.gender')}
-            value={gender}
-            onChange={setGender}
-            options={GENDERS.map((g) => ({ value: g, label: t(`gender.${g}` as TranslationKey) }))}
-          />
+            {error && <div className="auth-error">{t(error)}</div>}
 
-          <div className="inline-fields">
-            <Field label={t('profile.blood_group')}>
+            <button
+              type="button"
+              className="auth-btn"
+              disabled={busy}
+              onClick={() => (role === 'hospital_admin' ? void submit() : setStep(2))}
+            >
+              {role === 'hospital_admin' ? t('auth.create_account') : t('auth.next')}
+            </button>
+            <button type="button" className="auth-link" onClick={() => setStep(0)}>
+              {t('common.back')}
+            </button>
+          </>
+        )}
+
+        {/* ---------- step 2a: patient health ---------- */}
+        {step === 2 && role === 'patient' && (
+          <>
+            <Field label={t('profile.dob')} id="su-dob">
+              <input
+                id="su-dob"
+                className="auth-input"
+                type="date"
+                value={dateOfBirth}
+                onChange={(e) => setDateOfBirth(e.target.value)}
+              />
+            </Field>
+
+            <div className="auth-field">
+              <span className="auth-label">{t('profile.gender')}</span>
+              <div className="auth-row" style={{ flexWrap: 'wrap' }}>
+                {GENDERS.map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    className="auth-glass-btn"
+                    aria-pressed={gender === g}
+                    onClick={() => setGender(g)}
+                    style={{ flex: '1 1 40%' }}
+                  >
+                    {t(`gender.${g}` as TranslationKey)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="auth-row">
+              <Field label={t('profile.blood_group')} id="su-blood">
+                <select
+                  id="su-blood"
+                  className="auth-input"
+                  value={bloodGroup}
+                  onChange={(e) => setBloodGroup(e.target.value as BloodGroup)}
+                >
+                  {BLOOD_GROUPS.map((group) => (
+                    <option key={group} value={group} style={{ color: '#1a1930' }}>
+                      {group}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label={t('profile.height')} id="su-height">
+                <input
+                  id="su-height"
+                  className="auth-input"
+                  inputMode="numeric"
+                  value={heightCm}
+                  onChange={(e) => setHeightCm(e.target.value)}
+                />
+              </Field>
+              <Field label={t('profile.weight')} id="su-weight">
+                <input
+                  id="su-weight"
+                  className="auth-input"
+                  inputMode="decimal"
+                  value={weightKg}
+                  onChange={(e) => setWeightKg(e.target.value)}
+                />
+              </Field>
+            </div>
+
+            <Field label={t('profile.conditions')} id="su-cond">
+              <input
+                id="su-cond"
+                className="auth-input"
+                value={conditions}
+                onChange={(e) => setConditions(e.target.value)}
+                placeholder={t('profile.conditions_hint')}
+              />
+            </Field>
+
+            <Field label={t('profile.allergies')} id="su-allergy">
+              <input
+                id="su-allergy"
+                className="auth-input"
+                value={allergies}
+                onChange={(e) => setAllergies(e.target.value)}
+                placeholder={t('profile.allergies_hint')}
+              />
+            </Field>
+
+            <Field label={t('profile.address')} id="su-address">
+              <input
+                id="su-address"
+                className="auth-input"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+              />
+            </Field>
+
+            <div className="auth-row">
+              <Field label={t('profile.city')} id="su-city">
+                <input
+                  id="su-city"
+                  className="auth-input"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                />
+              </Field>
+              <Field label={t('profile.abha')} id="su-abha">
+                <input
+                  id="su-abha"
+                  className="auth-input"
+                  value={abhaId}
+                  onChange={(e) => setAbhaId(e.target.value)}
+                />
+              </Field>
+            </div>
+
+            <Field label={t('profile.hospital')} id="su-hospital">
               <select
-                className="select"
-                value={bloodGroup}
-                onChange={(e) => setBloodGroup(e.target.value as BloodGroup)}
+                id="su-hospital"
+                className="auth-input"
+                value={hospitalId}
+                onChange={(e) => setHospitalId(e.target.value)}
               >
-                {BLOOD_GROUPS.map((group) => (
-                  <option key={group} value={group}>
-                    {group}
+                {db.hospitals.map((h) => (
+                  <option key={h.id} value={h.id} style={{ color: '#1a1930' }}>
+                    {h.name}
                   </option>
                 ))}
               </select>
             </Field>
-            <Field label={t('profile.height')}>
-              <input
-                className="input"
-                inputMode="numeric"
-                value={heightCm}
-                onChange={(e) => setHeightCm(e.target.value)}
-              />
-            </Field>
-            <Field label={t('profile.weight')}>
-              <input
-                className="input"
-                inputMode="decimal"
-                value={weightKg}
-                onChange={(e) => setWeightKg(e.target.value)}
-              />
-            </Field>
-          </div>
 
-          <Field label={t('profile.conditions')}>
-            <input
-              className="input"
-              value={conditions}
-              onChange={(e) => setConditions(e.target.value)}
-              placeholder={t('profile.conditions_hint')}
-            />
-          </Field>
-
-          <Field label={t('profile.allergies')}>
-            <input
-              className="input"
-              value={allergies}
-              onChange={(e) => setAllergies(e.target.value)}
-              placeholder={t('profile.allergies_hint')}
-            />
-          </Field>
-
-          <Field label={t('profile.address')}>
-            <input className="input" value={address} onChange={(e) => setAddress(e.target.value)} />
-          </Field>
-
-          <div className="inline-fields">
-            <Field label={t('profile.city')}>
-              <input className="input" value={city} onChange={(e) => setCity(e.target.value)} />
-            </Field>
-            <Field label={t('profile.abha')}>
-              <input className="input" value={abhaId} onChange={(e) => setAbhaId(e.target.value)} />
-            </Field>
-          </div>
-
-          <Field label={t('profile.hospital')}>
-            <select
-              className="select"
-              value={hospitalId}
-              onChange={(e) => setHospitalId(e.target.value)}
-            >
-              {db.hospitals.map((h) => (
-                <option key={h.id} value={h.id}>
-                  {h.name}
+            <Field label={t('profile.primary_doctor')} id="su-doctor">
+              <select
+                id="su-doctor"
+                className="auth-input"
+                value={primaryDoctorId}
+                onChange={(e) => setPrimaryDoctorId(e.target.value)}
+              >
+                <option value="" style={{ color: '#1a1930' }}>
+                  {t('common.none')}
                 </option>
-              ))}
-            </select>
-          </Field>
+                {db.doctors.map((d) => (
+                  <option key={d.id} value={d.id} style={{ color: '#1a1930' }}>
+                    {d.fullName} — {d.specialization}
+                  </option>
+                ))}
+              </select>
+            </Field>
 
-          <Field label={t('profile.primary_doctor')}>
-            <select
-              className="select"
-              value={primaryDoctorId}
-              onChange={(e) => setPrimaryDoctorId(e.target.value)}
+            <div className="auth-row">
+              <Field label={t('profile.emergency_name')} id="su-em-name">
+                <input
+                  id="su-em-name"
+                  className="auth-input"
+                  value={emergencyName}
+                  onChange={(e) => setEmergencyName(e.target.value)}
+                />
+              </Field>
+              <Field label={t('profile.emergency_phone')} id="su-em-phone">
+                <input
+                  id="su-em-phone"
+                  className="auth-input"
+                  type="tel"
+                  value={emergencyPhone}
+                  onChange={(e) => setEmergencyPhone(e.target.value)}
+                />
+              </Field>
+            </div>
+
+            {error && <div className="auth-error">{t(error)}</div>}
+
+            <button
+              type="button"
+              className="auth-btn"
+              disabled={busy}
+              onClick={() => void submit()}
             >
-              <option value="">{t('common.none')}</option>
-              {db.doctors.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.fullName} — {d.specialization}
-                </option>
-              ))}
-            </select>
-          </Field>
+              {busy ? t('common.loading') : t('auth.create_account')}
+            </button>
+            <button type="button" className="auth-link" onClick={() => setStep(1)}>
+              {t('common.back')}
+            </button>
+          </>
+        )}
 
-          <div className="inline-fields">
-            <Field label={t('profile.emergency_name')}>
+        {/* ---------- step 2b: doctor practice ---------- */}
+        {step === 2 && role === 'doctor' && (
+          <>
+            <Field label={t('practice.specialization')} id="su-spec">
+              <select
+                id="su-spec"
+                className="auth-input"
+                value={specialization}
+                onChange={(e) => setSpecialization(e.target.value)}
+              >
+                {SPECIALIZATIONS.map((item) => (
+                  <option key={item} value={item} style={{ color: '#1a1930' }}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label={t('practice.registration')} id="su-reg">
               <input
-                className="input"
-                value={emergencyName}
-                onChange={(e) => setEmergencyName(e.target.value)}
+                id="su-reg"
+                className="auth-input"
+                value={registrationNumber}
+                onChange={(e) => setRegistrationNumber(e.target.value)}
+                placeholder="TN/MC/00000"
               />
             </Field>
-            <Field label={t('profile.emergency_phone')}>
+
+            <Field label={t('practice.hospital')} id="su-doc-hospital">
+              <select
+                id="su-doc-hospital"
+                className="auth-input"
+                value={hospitalId}
+                onChange={(e) => setHospitalId(e.target.value)}
+              >
+                {db.hospitals.map((h) => (
+                  <option key={h.id} value={h.id} style={{ color: '#1a1930' }}>
+                    {h.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label={t('practice.qualifications')} id="su-qual">
               <input
-                className="input"
-                type="tel"
-                value={emergencyPhone}
-                onChange={(e) => setEmergencyPhone(e.target.value)}
+                id="su-qual"
+                className="auth-input"
+                value={qualifications}
+                onChange={(e) => setQualifications(e.target.value)}
+                placeholder="MBBS, MD"
               />
             </Field>
-          </div>
 
-          {error && <div className="banner banner-danger">{t(error)}</div>}
+            <div className="auth-row">
+              <Field label={t('practice.experience')} id="su-exp">
+                <input
+                  id="su-exp"
+                  className="auth-input"
+                  inputMode="numeric"
+                  value={experienceYears}
+                  onChange={(e) => setExperienceYears(e.target.value)}
+                />
+              </Field>
+              <Field label={t('practice.fee')} id="su-fee">
+                <input
+                  id="su-fee"
+                  className="auth-input"
+                  inputMode="numeric"
+                  value={consultationFee}
+                  onChange={(e) => setConsultationFee(e.target.value)}
+                />
+              </Field>
+              <Field label={t('practice.room')} id="su-room">
+                <input
+                  id="su-room"
+                  className="auth-input"
+                  value={roomNumber}
+                  onChange={(e) => setRoomNumber(e.target.value)}
+                />
+              </Field>
+            </div>
 
-          <button
-            type="button"
-            className="btn btn-lg btn-primary"
-            disabled={busy}
-            onClick={() => void submit()}
-          >
-            {busy ? t('common.loading') : t('auth.create_account')}
-          </button>
-          <button type="button" className="btn btn-ghost" onClick={() => setStep(1)}>
-            {t('common.back')}
-          </button>
-        </>
-      )}
+            <Field label={t('practice.languages')} id="su-lang">
+              <input
+                id="su-lang"
+                className="auth-input"
+                value={languages}
+                onChange={(e) => setLanguages(e.target.value)}
+                placeholder={t('profile.allergies_hint')}
+              />
+            </Field>
 
-      {/* ---------- step 2b: doctor practice ---------- */}
-      {step === 2 && role === 'doctor' && (
-        <>
-          <Field label={t('practice.specialization')}>
-            <select
-              className="select"
-              value={specialization}
-              onChange={(e) => setSpecialization(e.target.value)}
+            {error && <div className="auth-error">{t(error)}</div>}
+
+            <button
+              type="button"
+              className="auth-btn"
+              disabled={busy}
+              onClick={() => void submit()}
             >
-              {SPECIALIZATIONS.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </Field>
+              {busy ? t('common.loading') : t('auth.create_account')}
+            </button>
+            <button type="button" className="auth-link" onClick={() => setStep(1)}>
+              {t('common.back')}
+            </button>
+          </>
+        )}
 
-          <Field label={t('practice.registration')}>
-            <input
-              className="input"
-              value={registrationNumber}
-              onChange={(e) => setRegistrationNumber(e.target.value)}
-              placeholder="TN/MC/00000"
-            />
-          </Field>
-
-          <Field label={t('practice.hospital')}>
-            <select
-              className="select"
-              value={hospitalId}
-              onChange={(e) => setHospitalId(e.target.value)}
-            >
-              {db.hospitals.map((h) => (
-                <option key={h.id} value={h.id}>
-                  {h.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          <Field label={t('practice.qualifications')}>
-            <input
-              className="input"
-              value={qualifications}
-              onChange={(e) => setQualifications(e.target.value)}
-              placeholder="MBBS, MD"
-            />
-          </Field>
-
-          <div className="inline-fields">
-            <Field label={t('practice.experience')}>
-              <input
-                className="input"
-                inputMode="numeric"
-                value={experienceYears}
-                onChange={(e) => setExperienceYears(e.target.value)}
-              />
-            </Field>
-            <Field label={t('practice.fee')}>
-              <input
-                className="input"
-                inputMode="numeric"
-                value={consultationFee}
-                onChange={(e) => setConsultationFee(e.target.value)}
-              />
-            </Field>
-            <Field label={t('practice.room')}>
-              <input
-                className="input"
-                value={roomNumber}
-                onChange={(e) => setRoomNumber(e.target.value)}
-              />
-            </Field>
-          </div>
-
-          <Field label={t('practice.languages')}>
-            <input
-              className="input"
-              value={languages}
-              onChange={(e) => setLanguages(e.target.value)}
-              placeholder={t('profile.allergies_hint')}
-            />
-          </Field>
-
-          {error && <div className="banner banner-danger">{t(error)}</div>}
-
-          <button
-            type="button"
-            className="btn btn-lg btn-primary"
-            disabled={busy}
-            onClick={() => void submit()}
-          >
-            {busy ? t('common.loading') : t('auth.create_account')}
-          </button>
-          <button type="button" className="btn btn-ghost" onClick={() => setStep(1)}>
-            {t('common.back')}
-          </button>
-        </>
-      )}
-
-      <p className="footnote">{t('auth.security_note')}</p>
-    </Screen>
+        <p className="auth-note">{t('auth.security_note')}</p>
+      </div>
+    </section>
   );
 }

@@ -10,25 +10,25 @@ export function WelcomeScreen() {
 
   return (
     <section className="screen">
-      <div className="splash">
-        <div className="splash-logo">
-          <Icon name="shield" size={56} strokeWidth={1.8} />
+      <div className="auth">
+        <div className="auth-head">
+          <span className="auth-logo">
+            <Icon name="shield" size={38} strokeWidth={1.8} />
+          </span>
+          <h1 className="auth-title">{t('app.name')}</h1>
+          <p className="auth-sub">{t('auth.welcome_title')}</p>
         </div>
 
-        <div className="stack-sm">
-          <h1>{t('app.name')}</h1>
-          <p>{t('auth.welcome_title')}</p>
-          <p style={{ fontSize: '0.86em', opacity: 0.9 }}>{t('auth.welcome_sub')}</p>
-        </div>
+        <p className="auth-note">{t('auth.welcome_sub')}</p>
 
-        <div className="field">
-          <span className="field-label">{t('splash.language_prompt')}</span>
-          <div className="options">
+        <div className="auth-field">
+          <span className="auth-label">{t('splash.language_prompt')}</span>
+          <div className="auth-row">
             {LANGUAGES.map((language) => (
               <button
                 key={language.code}
                 type="button"
-                className="option"
+                className="auth-glass-btn"
                 aria-pressed={settings.language === language.code}
                 onClick={() => patchSettings({ language: language.code as LanguageCode })}
               >
@@ -38,25 +38,20 @@ export function WelcomeScreen() {
           </div>
         </div>
 
-        <div className="stack">
-          <button
-            type="button"
-            className="btn btn-lg btn-secondary"
-            onClick={() => navigate('signin')}
-          >
-            {t('auth.signin')}
-          </button>
-          <button
-            type="button"
-            className="btn btn-lg btn-ghost"
-            style={{ color: 'inherit', borderColor: 'rgba(255,255,255,0.6)' }}
-            onClick={() => navigate('signup')}
-          >
-            {t('auth.signup')}
-          </button>
-        </div>
+        <button type="button" className="auth-btn" onClick={() => navigate('signin')}>
+          {t('auth.signin')}
+        </button>
 
-        <p className="footnote" style={{ color: 'inherit', opacity: 0.85 }}>
+        <button
+          type="button"
+          className="auth-glass-btn"
+          style={{ width: '100%' }}
+          onClick={() => navigate('signup')}
+        >
+          {t('auth.signup')}
+        </button>
+
+        <p className="auth-foot">
           {t('app.prototype_badge')} · {t('safety.disclaimer')}
         </p>
       </div>

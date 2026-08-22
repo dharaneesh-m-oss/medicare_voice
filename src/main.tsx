@@ -6,6 +6,7 @@ import './styles/global.css';
 import './styles/app.css';
 import './styles/motion.css';
 import './styles/theme.css';
+import './styles/glass.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

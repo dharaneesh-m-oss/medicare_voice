@@ -4,8 +4,8 @@ import react from '@vitejs/plugin-react';
 /**
  * A RELATIVE base, so one build runs everywhere this app is published:
  *
- *   Vercel / Netlify   served at the domain root
- *   GitHub Pages       served from /medicare_voice/
+ *   Vercel / Netlify    served at the domain root
+ *   GitHub Pages        served from /medicare_voice/
  *   Android (Capacitor) loaded from the APK, with no host at all
  *
  * An absolute base would have to be correct for exactly one of those and would
