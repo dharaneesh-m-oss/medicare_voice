@@ -2,21 +2,21 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 /**
- * The same source ships to three places, each needing a different base URL:
+ * A RELATIVE base, so one build runs everywhere this app is published:
  *
- *   dev            /                  the dev server root
- *   GitHub Pages   /medicare_voice/   served from a repo subpath
- *   Android app    ./                 loaded from the APK, not from a host
+ *   Vercel / Netlify   served at the domain root
+ *   GitHub Pages       served from /medicare_voice/
+ *   Android (Capacitor) loaded from the APK, with no host at all
  *
- * The first two are the defaults below; the Android build overrides it on the
- * command line (`vite build --base ./`, see the `build:app` script).
+ * An absolute base would have to be correct for exactly one of those and would
+ * silently 404 every asset on the others — a white screen with no error.
  *
- * `isPreview` matters: `vite preview` serves the built output, so it has to use
- * the same base the build baked into index.html, or every asset 404s.
+ * `./` is only safe because this app never changes the URL path: navigation is
+ * a screen stack, and `history.pushState(state, '')` is called without a URL.
+ * If real client-side routes are ever added, deep links would resolve assets
+ * against the wrong directory and the base must become per-target again.
  */
-const PAGES_BASE = '/medicare_voice/';
-
-export default defineConfig(({ command, isPreview }) => ({
-  base: command === 'build' || isPreview ? PAGES_BASE : '/',
+export default defineConfig({
+  base: './',
   plugins: [react()],
-}));
+});

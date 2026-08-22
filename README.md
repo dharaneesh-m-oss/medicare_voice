@@ -287,9 +287,14 @@ do that the workflow will fail on the deploy step.
 
 Live at: <https://dharaneesh-m-oss.github.io/medicare_voice/>
 
-The build sets Vite's `base` to `/medicare_voice/` and the workflow copies
-`index.html` to `404.html`, so deep links inside the single-page app resolve
-instead of returning a Pages 404.
+The build uses a **relative** base (`./`), so the same `dist/` works served from
+a domain root (Vercel, Netlify), from a repo subpath (Pages) and from inside the
+APK. An absolute base can only be right for one of those and silently 404s every
+asset on the others — which looks like a blank white page with no error.
+
+That is only safe because this app never changes the URL path: navigation is a
+screen stack and `history.pushState(state, '')` is called without a URL. If real
+client-side routes are ever added, the base has to become per-target again.
 
 To enable real Google Sign-In on the published site, add a repository secret
 `VITE_GOOGLE_CLIENT_ID` (Settings → Secrets and variables → Actions) with a
@@ -297,14 +302,25 @@ Google OAuth **Web application** client id whose authorised origin is
 `https://dharaneesh-m-oss.github.io`. Without the secret the site runs on email
 accounts and says plainly that Google sign-in is not configured.
 
+### Web — Vercel
+
+Import the repo at [vercel.com/new](https://vercel.com/new). `vercel.json` pins
+the framework, build command and output directory, so no dashboard configuration
+is needed; every push to `main` redeploys.
+
 ### Android — Capacitor
 
 Capacitor wraps the same built bundle in a native shell
 (`capacitor.config.ts`, app id `in.medicarevoice.app`).
 
 `.github/workflows/build-android.yml` builds a **debug APK** on every push to
-`main`. Download it from the workflow run's *Artifacts* section, or push a tag
-(`git tag v0.1.0 && git push --tags`) to attach the APK to a GitHub release.
+`main`, and publishes it to a GitHub release on every `v*` tag.
+
+**Direct download (no GitHub account needed):**
+<https://github.com/dharaneesh-m-oss/medicare_voice/releases/latest/download/MediCare-Voice.apk>
+
+The asset filename is kept constant so that link stays valid for every future
+version. To cut a new one: `git tag v0.2.0 && git push --tags`.
 
 To install on the phone: transfer the APK and allow "install from unknown
 sources". A debug APK is signed with a throwaway debug key — fine for
@@ -321,8 +337,11 @@ npm run build:app
 npm run open:android
 ```
 
-The first command builds the web bundle with a relative base and copies it into
-the native project; the second opens it in Android Studio to run on a device.
+The first command builds the web bundle and copies it into the native project;
+the second opens it in Android Studio to run on a device.
+
+The APK is self-contained — the whole app ships inside it and makes no network
+calls — so it runs with no server and no internet.
 
 ### Known limitation carried into both builds
 
