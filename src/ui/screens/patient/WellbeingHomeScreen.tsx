@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useMemo, useState } from 'react';
 
 import { useApp } from '../../../app/AppState';
 import { useNavigator, type ScreenName } from '../../../app/Navigator';
@@ -7,64 +7,39 @@ import type { TranslationKey } from '../../../core/i18n';
 import { getInsightsEngine } from '../../../core/insights/InsightsEngine';
 import { buildDayView, getNextDose, summariseDay } from '../../../core/scheduler/MedicationScheduler';
 import { formatStrength } from '../../../core/types';
-import { formatDateLong, formatTime12h, toISODate } from '../../../core/utils/date';
+import { formatDateLong, formatTime12h, fromISODate, toISODate } from '../../../core/utils/date';
 import type { FivePoint } from '../../../core/wellness/types';
-import { goalStreak, todayLog, todayMood } from '../../../core/wellness/WellnessService';
+import {
+  activitySeries,
+  goalStreak,
+  todayLog,
+  todayMood,
+} from '../../../core/wellness/WellnessService';
 import { Icon, type IconName } from '../../components/Icon';
 import { SafetyNote, SpeakButton } from '../../components/common';
-import { Chip, InsightCard, Panel, Toast, useToast } from '../../components/kit';
+import {
+  ActivityRings,
+  Chip,
+  InsightCard,
+  MetricCard,
+  Panel,
+  Toast,
+  WeekStrip,
+  useToast,
+  type RingSpec,
+} from '../../components/kit';
 
 const FACES = ['😞', '🙁', '😐', '🙂', '😄'];
 const LEVELS: FivePoint[] = [1, 2, 3, 4, 5];
 
-const PILLAR_ICON: Record<string, IconName> = {
-  movement: 'steps',
-  sleep: 'moon',
-  hydration: 'droplet',
-  mood: 'smile',
-  medication: 'pills',
+/** Each pillar's hue, matching the CSS custom properties. */
+const HUE: Record<string, { colour: string; soft: string; icon: IconName }> = {
+  movement: { colour: 'var(--move)', soft: 'var(--move-soft)', icon: 'steps' },
+  sleep: { colour: 'var(--sleep)', soft: 'var(--sleep-soft)', icon: 'moon' },
+  hydration: { colour: 'var(--water)', soft: 'var(--water-soft)', icon: 'droplet' },
+  mood: { colour: 'var(--mood)', soft: 'var(--mood-soft)', icon: 'smile' },
+  medication: { colour: 'var(--meds)', soft: 'var(--meds-soft)', icon: 'pills' },
 };
-
-/** The score ring — big, animated, and the first thing on the screen. */
-function ScoreRing({ score }: { score: number | null }) {
-  const size = 128;
-  const radius = size / 2 - 11;
-  const circumference = 2 * Math.PI * radius;
-  const pct = score === null ? 0 : score / 100;
-
-  return (
-    <div className="score-figure">
-      <svg width={size} height={size} aria-hidden="true">
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="rgba(255,255,255,0.25)"
-          strokeWidth={11}
-        />
-        <circle
-          className="ring-progress"
-          style={{ '--ring-circ': circumference } as unknown as CSSProperties}
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="#ffffff"
-          strokeWidth={11}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={circumference * (1 - pct)}
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
-        />
-      </svg>
-      <div className="score-readout">
-        <div className="score-number">{score ?? '—'}</div>
-        <div className="score-outof">/ 100</div>
-      </div>
-    </div>
-  );
-}
 
 export function WellbeingHomeScreen() {
   const {
@@ -103,6 +78,30 @@ export function WellbeingHomeScreen() {
   );
   const checkupDoctor = db.doctors.find((d) => d.id === checkup?.doctorId) ?? null;
 
+  const steps = today?.steps ?? 0;
+  const sleep = today?.sleepHours ?? 0;
+  const water = today?.waterGlasses ?? 0;
+
+  /* The three arcs: today against today's goals. */
+  const rings: RingSpec[] = [
+    { value: steps / goal.stepsPerDay, colour: 'var(--move)', label: t('pillar.movement') },
+    { value: sleep / goal.sleepHoursPerNight, colour: 'var(--sleep)', label: t('pillar.sleep') },
+    { value: water / goal.waterGlassesPerDay, colour: 'var(--water)', label: t('pillar.hydration') },
+  ];
+
+  const week = useMemo(
+    () =>
+      activitySeries(activity, 'steps', 7).map((point) => ({
+        label: fromISODate(point.date)
+          .toLocaleDateString(locale, { weekday: 'short' })
+          .slice(0, 2),
+        value: point.value,
+        isToday: point.date === toISODate(now),
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [activity, locale],
+  );
+
   const greetingKey =
     now.getHours() < 12
       ? 'home.greeting_morning'
@@ -133,17 +132,6 @@ export function WellbeingHomeScreen() {
 
   const topInsights = insights.slice(0, 4);
 
-  const quick: { icon: IconName; value: string; label: string }[] = [
-    { icon: 'steps', value: String(today?.steps ?? 0), label: t('wellness.steps') },
-    { icon: 'moon', value: String(today?.sleepHours ?? 0), label: t('wellness.sleep') },
-    { icon: 'droplet', value: String(today?.waterGlasses ?? 0), label: t('wellness.water') },
-    {
-      icon: 'pills',
-      value: `${summary.taken}/${summary.total}`,
-      label: t('nav.medicines'),
-    },
-  ];
-
   return (
     <div className="page">
       <div className="row">
@@ -153,77 +141,102 @@ export function WellbeingHomeScreen() {
         <SpeakButton text={spoken} compact />
       </div>
 
-      {/* ---------- the score ---------- */}
-      <div className="score-hero">
-        <div className="score-main">
-          <ScoreRing score={wellbeing.score} />
-          <div className="score-copy">
-            <span className="detail-label" style={{ color: 'rgba(255,255,255,0.9)' }}>
-              {t('wellbeing.score')}
-            </span>
-            <span className="score-band">
+      {/* ---------- rings ---------- */}
+      <div className="rings-hero">
+        <div className="rings-main">
+          <ActivityRings
+            rings={rings}
+            centre={
+              <>
+                <div className="rings-score">{wellbeing.score ?? '—'}</div>
+                <div className="rings-outof">/ 100</div>
+              </>
+            }
+          />
+          <div className="rings-copy">
+            <span className="rings-band">
               {wellbeing.score === null ? t('wellbeing.no_data') : bandLabel}
             </span>
             {trendLabel && (
-              <span className="score-trend">
-                <Icon name="activity" size={16} />
+              <span className="rings-trend">
+                <Icon name="activity" size={15} />
                 {trendLabel}
               </span>
             )}
-            <span className="score-note">
+            <span className="rings-sub">
               {t('wellbeing.days_logged', { count: wellbeing.daysLogged })}
               {streak > 0 ? ` · ${t('wellness.streak_days', { count: streak })}` : ''}
             </span>
           </div>
         </div>
 
-        {showPillars && (
-          <div className="pillars">
-            {wellbeing.pillars.map((pillar) => (
-              <div
-                className={pillar.hasData ? 'pillar' : 'pillar pillar-empty'}
-                key={pillar.key}
-              >
-                <span className="pillar-name">
-                  <Icon name={PILLAR_ICON[pillar.key]} size={16} />{' '}
-                  {t(`pillar.${pillar.key}` as TranslationKey)}
-                </span>
-                <span className="pillar-track">
-                  <span
-                    className="pillar-fill"
-                    style={{ width: `${pillar.hasData ? pillar.value : 0}%` }}
-                  />
-                </span>
-                <span className="pillar-value">
-                  {pillar.hasData ? `${pillar.value}%` : t('wellbeing.no_pillar_data')}
-                </span>
-              </div>
-            ))}
+        <div className="rings-legend">
+          <div className="legend-item">
+            <span className="legend-key">
+              <span className="legend-swatch" style={{ background: 'var(--move)' }} />
+              {t('pillar.movement')}
+            </span>
+            <span className="legend-value">{steps.toLocaleString(locale)}</span>
+            <span className="legend-goal">/ {goal.stepsPerDay.toLocaleString(locale)}</span>
           </div>
-        )}
-
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={() => setShowPillars((v) => !v)}
-        >
-          {showPillars ? t('common.close') : t('wellbeing.pillars')}
-        </button>
-        <span className="score-note">{t('wellbeing.score_hint')}</span>
+          <div className="legend-item">
+            <span className="legend-key">
+              <span className="legend-swatch" style={{ background: 'var(--sleep)' }} />
+              {t('pillar.sleep')}
+            </span>
+            <span className="legend-value">{sleep}</span>
+            <span className="legend-goal">/ {goal.sleepHoursPerNight} h</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-key">
+              <span className="legend-swatch" style={{ background: 'var(--water)' }} />
+              {t('pillar.hydration')}
+            </span>
+            <span className="legend-value">{water}</span>
+            <span className="legend-goal">/ {goal.waterGlassesPerDay}</span>
+          </div>
+        </div>
       </div>
 
-      {/* ---------- today at a glance ---------- */}
-      <h2 className="section-title">{t('wellbeing.today')}</h2>
+      {/* ---------- today's numbers ---------- */}
       <div className="quick-grid">
-        {quick.map((item) => (
-          <div className="quick-stat" key={item.label}>
-            <span className="quick-icon">
-              <Icon name={item.icon} size={22} />
-            </span>
-            <span className="quick-value">{item.value}</span>
-            <span className="quick-label">{item.label}</span>
-          </div>
-        ))}
+        <MetricCard
+          icon={HUE.movement.icon}
+          label={t('wellness.steps')}
+          value={steps.toLocaleString(locale)}
+          progress={steps / goal.stepsPerDay}
+          goalLabel={t('wellness.goal', { value: goal.stepsPerDay.toLocaleString(locale) })}
+          colour={HUE.movement.colour}
+          softColour={HUE.movement.soft}
+        />
+        <MetricCard
+          icon={HUE.sleep.icon}
+          label={t('wellness.sleep')}
+          value={sleep}
+          unit="h"
+          progress={sleep / goal.sleepHoursPerNight}
+          goalLabel={t('wellness.goal', { value: `${goal.sleepHoursPerNight} h` })}
+          colour={HUE.sleep.colour}
+          softColour={HUE.sleep.soft}
+        />
+        <MetricCard
+          icon={HUE.hydration.icon}
+          label={t('wellness.water')}
+          value={water}
+          progress={water / goal.waterGlassesPerDay}
+          goalLabel={t('wellness.goal', { value: goal.waterGlassesPerDay })}
+          colour={HUE.hydration.colour}
+          softColour={HUE.hydration.soft}
+        />
+        <MetricCard
+          icon={HUE.medication.icon}
+          label={t('nav.medicines')}
+          value={`${summary.taken}/${summary.total}`}
+          progress={summary.total > 0 ? summary.taken / summary.total : 0}
+          goalLabel={t('home.doses_today', { taken: summary.taken, total: summary.total })}
+          colour={HUE.medication.colour}
+          softColour={HUE.medication.soft}
+        />
       </div>
 
       <button type="button" className="btn btn-secondary" onClick={() => navigate('wellness')}>
@@ -231,7 +244,15 @@ export function WellbeingHomeScreen() {
         {t('wellbeing.quick_log')}
       </button>
 
-      {/* ---------- one-tap mood ---------- */}
+      {/* ---------- the week ---------- */}
+      <Panel
+        title={`${t('wellness.steps')} · ${t('wellness.week')}`}
+        action={<Chip tone="primary">{t('wellness.streak_days', { count: streak })}</Chip>}
+      >
+        <WeekStrip days={week} colour="var(--move)" max={goal.stepsPerDay} />
+      </Panel>
+
+      {/* ---------- mood ---------- */}
       <Panel title={t('wellbeing.how_today')}>
         <div className="mood-strip">
           {LEVELS.map((level) => (
@@ -257,18 +278,13 @@ export function WellbeingHomeScreen() {
             </button>
           ))}
         </div>
-        <span className="muted">{t('wellbeing.tap_mood')}</span>
         <button type="button" className="btn btn-ghost" onClick={() => navigate('mood')}>
           {t('mood.title')}
         </button>
       </Panel>
 
       {/* ---------- calm ---------- */}
-      <button
-        type="button"
-        className="tile tile-primary"
-        onClick={() => navigate('breathe')}
-      >
+      <button type="button" className="tile tile-primary" onClick={() => navigate('breathe')}>
         <span className="tile-icon">
           <Icon name="heart" size={32} />
         </span>
@@ -278,7 +294,7 @@ export function WellbeingHomeScreen() {
         </span>
       </button>
 
-      {/* ---------- what the engine noticed ---------- */}
+      {/* ---------- insights ---------- */}
       <Panel
         title={t('insight.title')}
         action={<Chip tone="violet">{getInsightsEngine().displayName}</Chip>}
@@ -296,7 +312,50 @@ export function WellbeingHomeScreen() {
         </p>
       </Panel>
 
-      {/* ---------- care strip ---------- */}
+      {/* ---------- score breakdown ---------- */}
+      <Panel
+        title={t('wellbeing.pillars')}
+        action={
+          <button
+            type="button"
+            className="link-button"
+            onClick={() => setShowPillars((v) => !v)}
+          >
+            {showPillars ? t('common.close') : t('common.view')}
+          </button>
+        }
+      >
+        {showPillars && (
+          <div className="pillars">
+            {wellbeing.pillars.map((pillar) => (
+              <div
+                className={pillar.hasData ? 'pillar' : 'pillar pillar-empty'}
+                key={pillar.key}
+              >
+                <span className="pillar-name">
+                  <Icon name={HUE[pillar.key].icon} size={16} />{' '}
+                  {t(`pillar.${pillar.key}` as TranslationKey)}
+                </span>
+                <span className="pillar-track">
+                  <span
+                    className="pillar-fill"
+                    style={{
+                      width: `${pillar.hasData ? pillar.value : 0}%`,
+                      background: HUE[pillar.key].colour,
+                    }}
+                  />
+                </span>
+                <span className="pillar-value">
+                  {pillar.hasData ? `${pillar.value}%` : t('wellbeing.no_pillar_data')}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+        <p className="footnote">{t('wellbeing.score_hint')}</p>
+      </Panel>
+
+      {/* ---------- care ---------- */}
       <h2 className="section-title">{t('wellbeing.care')}</h2>
 
       <button type="button" className="tile" onClick={() => navigate('schedule')}>
@@ -327,9 +386,7 @@ export function WellbeingHomeScreen() {
           <Icon name="calendar" size={28} />
         </span>
         <span className="tile-text">
-          <span className="tile-label">
-            {checkupDoctor?.fullName ?? t('appointments.book')}
-          </span>
+          <span className="tile-label">{checkupDoctor?.fullName ?? t('appointments.book')}</span>
           <span className="tile-sub">
             {checkup
               ? `${formatDateLong(checkup.date, locale)} · ${formatTime12h(checkup.time)}`
@@ -358,7 +415,6 @@ export function WellbeingHomeScreen() {
         </span>
       </button>
 
-      <p className="footnote">{t('wellbeing.score_hint')}</p>
       <SafetyNote />
       <Toast message={toast} />
     </div>

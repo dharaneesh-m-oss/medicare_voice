@@ -490,6 +490,170 @@ export function Meter({
   );
 }
 
+/* ---------------------------- activity rings ---------------------------- */
+
+export interface RingSpec {
+  /** 0..1, clamped — overshooting a goal fills the ring, it never wraps. */
+  value: number;
+  colour: string;
+  label: string;
+}
+
+/**
+ * Concentric progress arcs, the readout every fitness tracker settled on: three
+ * quantities readable at a glance, at arm's length, without reading a word.
+ * Each arc animates from empty via the shared `ring-progress` keyframe.
+ */
+export function ActivityRings({
+  rings,
+  size = 168,
+  centre,
+}: {
+  rings: RingSpec[];
+  size?: number;
+  centre?: ReactNode;
+}) {
+  const stroke = size * 0.082;
+  const gap = stroke * 0.42;
+
+  return (
+    <div className="rings-figure">
+      <svg width={size} height={size} role="img" aria-label={rings.map((r) => r.label).join(', ')}>
+        {rings.map((ring, index) => {
+          const radius = size / 2 - stroke / 2 - index * (stroke + gap);
+          if (radius <= stroke) return null;
+          const circumference = 2 * Math.PI * radius;
+          const pct = Math.max(0, Math.min(1, ring.value));
+          return (
+            <g key={ring.label}>
+              <circle
+                cx={size / 2}
+                cy={size / 2}
+                r={radius}
+                fill="none"
+                stroke={ring.colour}
+                strokeOpacity={0.22}
+                strokeWidth={stroke}
+              />
+              <circle
+                className="ring-progress"
+                style={
+                  {
+                    '--ring-circ': circumference,
+                    animationDelay: `${index * 110}ms`,
+                  } as unknown as CSSProperties
+                }
+                cx={size / 2}
+                cy={size / 2}
+                r={radius}
+                fill="none"
+                stroke={ring.colour}
+                strokeWidth={stroke}
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                strokeDashoffset={circumference * (1 - pct)}
+                transform={`rotate(-90 ${size / 2} ${size / 2})`}
+              >
+                <title>{`${ring.label}: ${Math.round(pct * 100)}%`}</title>
+              </circle>
+            </g>
+          );
+        })}
+      </svg>
+      {centre && <div className="rings-centre">{centre}</div>}
+    </div>
+  );
+}
+
+/* ---------------------------- metric card ---------------------------- */
+
+export function MetricCard({
+  icon,
+  label,
+  value,
+  unit,
+  goalLabel,
+  progress,
+  colour,
+  softColour,
+}: {
+  icon: IconName;
+  label: string;
+  value: string | number;
+  unit?: string;
+  goalLabel?: string;
+  /** 0..1 */
+  progress?: number;
+  colour: string;
+  softColour: string;
+}) {
+  return (
+    <div className="metric-card">
+      <div className="metric-head">
+        <span className="metric-icon" style={{ background: softColour, color: colour }}>
+          <Icon name={icon} size={20} />
+        </span>
+        <span className="metric-label">{label}</span>
+      </div>
+
+      <span className="metric-value">
+        {value}
+        {unit && <span className="metric-unit">{unit}</span>}
+      </span>
+
+      {progress !== undefined && (
+        <span className="metric-track">
+          <span
+            className="metric-fill"
+            style={{
+              width: `${Math.max(0, Math.min(1, progress)) * 100}%`,
+              background: colour,
+            }}
+          />
+        </span>
+      )}
+
+      {goalLabel && <span className="metric-goal">{goalLabel}</span>}
+    </div>
+  );
+}
+
+/* ---------------------------- week strip ---------------------------- */
+
+export function WeekStrip({
+  days,
+  colour,
+  max,
+}: {
+  days: { label: string; value: number; isToday?: boolean }[];
+  colour: string;
+  max: number;
+}) {
+  const ceiling = Math.max(max, ...days.map((d) => d.value), 1);
+  return (
+    <div className="week-strip">
+      {days.map((day, index) => (
+        <div
+          className={day.isToday ? 'week-day week-today' : 'week-day'}
+          key={`${day.label}-${index}`}
+        >
+          <span className="week-bar">
+            <span
+              style={{
+                height: `${Math.max(4, (day.value / ceiling) * 100)}%`,
+                background: day.value >= max ? colour : `${colour}66`,
+                animationDelay: `${index * 45}ms`,
+              }}
+              title={`${day.label}: ${day.value}`}
+            />
+          </span>
+          <span className="week-label">{day.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ---------------------------- insights ---------------------------- */
 
 const INSIGHT_ICON: Record<string, IconName> = {
