@@ -49,19 +49,39 @@ jobs:
       # A debug APK is signed with a throwaway debug key: fine for sideloading
       # and for testing on the iQOO, NOT acceptable for Play distribution.
       # Release signing needs a keystore added as repository secrets.
-      - name: Name the artifact
-        id: name
-        run: echo "stamp=$(date +%Y%m%d)-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      #
+      # The filename is kept CONSTANT so that
+      #   /releases/latest/download/MediCare-Voice.apk
+      # is a permanent direct link that survives every new version — the thing
+      # you can put in a QR code or send to a phone.
+      - name: Stage the APK under a stable name
+        id: apk
+        run: |
+          mkdir -p out
+          cp android/app/build/outputs/apk/debug/app-debug.apk out/MediCare-Voice.apk
+          echo "stamp=$(date +%Y%m%d)-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: medicare-voice-debug-${{ steps.name.outputs.stamp }}
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: medicare-voice-debug-${{ steps.apk.outputs.stamp }}
+          path: out/MediCare-Voice.apk
           if-no-files-found: error
           retention-days: 30
 
-      - name: Attach APK to release
+      # Tag a version (git tag v0.1.0 && git push --tags) to publish a release
+      # whose APK anyone can download without a GitHub account.
+      - name: Publish APK to a release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: android/app/build/outputs/apk/debug/app-debug.apk
+          files: out/MediCare-Voice.apk
+          generate_release_notes: true
+          body: |
+            **Install on Android:** download `MediCare-Voice.apk` below, open it
+            on the phone and allow installation from unknown sources.
+
+            Debug-signed build for sideloading and testing — not a Play release.
+
+            Demo logins (password `demo1234`):
+            `kamala@demo.health` (patient) · `anitha@demo.health` (doctor) ·
+            `admin@demo.health` (hospital desk)
