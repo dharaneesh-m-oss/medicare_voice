@@ -376,7 +376,8 @@
 .screen-body,
 .rail,
 .table-wrap {
-  scroll-behavior: smooth;
+  /* No smooth scroll-behavior here: it does nothing for a finger, and it makes
+     programmatic scrolls depend on the compositor running. */
   overscroll-behavior: contain;
 }
 

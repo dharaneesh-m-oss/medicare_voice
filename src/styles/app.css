@@ -30,7 +30,8 @@
 .workspace {
   width: 100%;
   max-width: 1180px;
-  min-height: 100dvh;
+  height: 100%;
+  min-height: 0;
   background: var(--surface-alt);
   display: flex;
   flex-direction: column;
@@ -40,8 +41,8 @@
 
 @media (min-width: 900px) {
   .workspace {
-    min-height: calc(100dvh - 48px);
-    max-height: calc(100dvh - 48px);
+    height: calc(100vh - 48px);
+    height: calc(100dvh - 48px);
     border-radius: 24px;
     box-shadow: var(--shadow-lg);
     border: 1px solid var(--border);
@@ -57,6 +58,8 @@
 .frame-main {
   flex: 1;
   min-width: 0;
+  /* Column ancestor of the scroll pane — same shrink rule applies. */
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
@@ -240,7 +243,9 @@
 
 .page {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 20px 18px 28px;
   display: flex;
   flex-direction: column;
