@@ -272,6 +272,66 @@ that a repository-layer change.
 
 ---
 
+---
+
+## Publishing
+
+The same source ships as a web app and an Android app.
+
+### Web — GitHub Pages
+
+`.github/workflows/deploy-web.yml` builds and publishes on every push to `main`.
+
+**One-time setup:** repo **Settings → Pages → Source: GitHub Actions**. Until you
+do that the workflow will fail on the deploy step.
+
+Live at: <https://dharaneesh-m-oss.github.io/medicare_voice/>
+
+The build sets Vite's `base` to `/medicare_voice/` and the workflow copies
+`index.html` to `404.html`, so deep links inside the single-page app resolve
+instead of returning a Pages 404.
+
+To enable real Google Sign-In on the published site, add a repository secret
+`VITE_GOOGLE_CLIENT_ID` (Settings → Secrets and variables → Actions) with a
+Google OAuth **Web application** client id whose authorised origin is
+`https://dharaneesh-m-oss.github.io`. Without the secret the site runs on email
+accounts and says plainly that Google sign-in is not configured.
+
+### Android — Capacitor
+
+Capacitor wraps the same built bundle in a native shell
+(`capacitor.config.ts`, app id `in.medicarevoice.app`).
+
+`.github/workflows/build-android.yml` builds a **debug APK** on every push to
+`main`. Download it from the workflow run's *Artifacts* section, or push a tag
+(`git tag v0.1.0 && git push --tags`) to attach the APK to a GitHub release.
+
+To install on the phone: transfer the APK and allow "install from unknown
+sources". A debug APK is signed with a throwaway debug key — fine for
+sideloading onto the iQOO for testing, **not** acceptable for Play distribution.
+Release signing needs a keystore stored as repository secrets.
+
+Locally, with Android Studio installed:
+
+```bash
+npm run build:app
+```
+
+```bash
+npm run open:android
+```
+
+The first command builds the web bundle with a relative base and copies it into
+the native project; the second opens it in Android Studio to run on a device.
+
+### Known limitation carried into both builds
+
+Reminders still fire only while the app is open — they run on an in-app timer,
+not `AlarmManager`. Making them reliable on Android means adding
+`@capacitor/local-notifications` and scheduling from
+`MedicationScheduler.getPendingReminders()`; the decision logic does not change,
+only the delivery mechanism.
+
 ## Safety
 
 MediCare Voice does not diagnose, does not prescribe, does not suggest dosage

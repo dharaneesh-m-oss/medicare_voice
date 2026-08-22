@@ -11,3 +11,16 @@ createRoot(document.getElementById('root')!).render(
     <App />
   </StrictMode>,
 );
+
+/**
+ * Register the service worker in production only — in dev it would shadow
+ * Vite's module graph and serve stale code. Capacitor loads from a
+ * capacitor:// origin where workers are unnecessary, so it is skipped there too.
+ */
+if (import.meta.env.PROD && 'serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register(`${import.meta.env.BASE_URL}sw.js`, { scope: import.meta.env.BASE_URL })
+      .catch((err) => console.warn('[sw] registration failed', err));
+  });
+}

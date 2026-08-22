@@ -1,0 +1,67 @@
+name: Build Android APK
+
+# Produces an installable debug APK on every push to main, and attaches a copy
+# to any tagged release. Runs in CI because the Android SDK is not needed on a
+# developer machine to work on this project — only to package it.
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Capacitor 8 targets a modern Android Gradle Plugin, which needs JDK 21.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: android-actions/setup-android@v3
+
+      - run: npm ci
+
+      # Builds the web bundle with a relative base and copies it into the
+      # native project (`vite build --base ./ && cap sync android`).
+      - name: Build web bundle and sync to Android
+        run: npm run build:app
+        env:
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+
+      - name: Assemble debug APK
+        working-directory: android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      # A debug APK is signed with a throwaway debug key: fine for sideloading
+      # and for testing on the iQOO, NOT acceptable for Play distribution.
+      # Release signing needs a keystore added as repository secrets.
+      - name: Name the artifact
+        id: name
+        run: echo "stamp=$(date +%Y%m%d)-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: medicare-voice-debug-${{ steps.name.outputs.stamp }}
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Attach APK to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: android/app/build/outputs/apk/debug/app-debug.apk

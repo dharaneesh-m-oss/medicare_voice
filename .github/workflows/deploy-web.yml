@@ -1,0 +1,66 @@
+name: Deploy web app
+
+# Publishes the built site to GitHub Pages on every push to main.
+# One-time setup in the repo: Settings -> Pages -> Source: "GitHub Actions".
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Allow this workflow to publish to Pages, and let the deploy step mint an id token.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never run two deploys at once; a queued one supersedes the running one.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Fail the deploy on a type error rather than shipping a broken build.
+      - name: Typecheck
+        run: npx tsc -b
+
+      - name: Build
+        run: npm run build
+        env:
+          # Set this repository secret to enable real Google Sign-In on the
+          # published site. Without it the app runs on email accounts and says
+          # plainly that Google sign-in is not configured.
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+
+      # Pages serves static files, so a deep link like /medicare_voice/foo would
+      # 404. The app is a single page; copying index.html to 404.html makes Pages
+      # hand every unknown path back to the app.
+      - name: Add SPA fallback
+        run: cp dist/index.html dist/404.html
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

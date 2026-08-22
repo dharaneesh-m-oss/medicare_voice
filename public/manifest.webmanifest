@@ -2,12 +2,18 @@
   "name": "MediCare Voice",
   "short_name": "MediCare",
   "description": "Understand Your Medicine. Remember Your Schedule. Stay Safe.",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0a5c7a",
   "theme_color": "#0a5c7a",
   "icons": [
-    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
-  ]
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "scope": "./"
 }
