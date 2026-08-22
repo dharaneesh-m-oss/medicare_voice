@@ -1,0 +1,423 @@
+/* ============================================================
+   MediCare Voice — motion & depth layer
+   Loaded last. Everything here is presentation only: remove this
+   file and the app still works, it just stops feeling alive.
+
+   Rule for this product: motion carries MEANING (where a screen came
+   from, that a value filled, that something arrived) and never costs
+   legibility. Nothing bounces for decoration, nothing moves under a
+   finger, and the whole layer disables itself under
+   prefers-reduced-motion.
+   ============================================================ */
+
+:root {
+  /* A single easing family keeps every transition feeling related. */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+
+  --dur-fast: 130ms;
+  --dur: 260ms;
+  --dur-slow: 420ms;
+  --dur-chart: 800ms;
+}
+
+/* ---------------- keyframes ---------------- */
+
+@keyframes mv-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+}
+
+@keyframes mv-push-forward {
+  from {
+    opacity: 0;
+    transform: translate3d(26px, 0, 0);
+  }
+}
+
+@keyframes mv-push-back {
+  from {
+    opacity: 0;
+    transform: translate3d(-26px, 0, 0);
+  }
+}
+
+@keyframes mv-switch {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0) scale(0.994);
+  }
+}
+
+@keyframes mv-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes mv-sheet {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 28px, 0) scale(0.97);
+  }
+}
+
+@keyframes mv-toast {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 18px);
+  }
+}
+
+@keyframes mv-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+@keyframes mv-ring {
+  from {
+    stroke-dashoffset: var(--ring-circ, 0);
+  }
+}
+
+@keyframes mv-meter {
+  from {
+    width: 0;
+  }
+}
+
+@keyframes mv-bar {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes mv-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes mv-pulse-soft {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* ---------------- screen transitions ---------------- */
+
+/* The stack knows whether it pushed, popped or switched tab, and the
+   screen enters from the matching direction. That is what makes the app
+   feel like one surface instead of a slideshow of pages. */
+.screen-transition {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  animation: mv-switch var(--dur) var(--ease-out) backwards;
+  will-change: transform, opacity;
+}
+
+.screen-transition[data-dir='forward'] {
+  animation-name: mv-push-forward;
+}
+
+.screen-transition[data-dir='back'] {
+  animation-name: mv-push-back;
+}
+
+/* The base layer's own fade would double up with this one. */
+.screen {
+  animation: none;
+}
+
+/* ---------------- content cascade ---------------- */
+
+/* Direct children of a scroll body arrive in sequence. Short delays only:
+   the last card must not keep an elderly reader waiting.
+
+   Note the `backwards` fill mode everywhere in this file rather than `both`:
+   the animation covers its delay, then hands the element back to its own
+   normal style. Decoration can therefore never leave content invisible. */
+.page > *,
+.screen-body > * {
+  animation: mv-rise var(--dur) var(--ease-out) backwards;
+}
+
+.page > *:nth-child(1),
+.screen-body > *:nth-child(1) {
+  animation-delay: 0ms;
+}
+.page > *:nth-child(2),
+.screen-body > *:nth-child(2) {
+  animation-delay: 40ms;
+}
+.page > *:nth-child(3),
+.screen-body > *:nth-child(3) {
+  animation-delay: 80ms;
+}
+.page > *:nth-child(4),
+.screen-body > *:nth-child(4) {
+  animation-delay: 115ms;
+}
+.page > *:nth-child(5),
+.screen-body > *:nth-child(5) {
+  animation-delay: 145ms;
+}
+.page > *:nth-child(6),
+.screen-body > *:nth-child(6) {
+  animation-delay: 170ms;
+}
+.page > *:nth-child(n + 7),
+.screen-body > *:nth-child(n + 7) {
+  animation-delay: 190ms;
+}
+
+/* ---------------- touch feedback ---------------- */
+
+.btn,
+.tile,
+.option,
+.slot,
+.day-chip,
+.tab,
+.sample,
+.row-item,
+.stat,
+.header-btn,
+.avatar,
+.segmented button,
+.tabbar-item,
+.rail-item,
+.chip {
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.btn:active,
+.option:active,
+.slot:active,
+.day-chip:active,
+.tab:active,
+.segmented button:active {
+  transform: scale(0.975);
+}
+
+.tile:active,
+.sample:active,
+.row-item:active {
+  transform: scale(0.99);
+}
+
+.avatar:active,
+.header-btn:active {
+  transform: scale(0.93);
+}
+
+@media (hover: hover) {
+  .tile:hover,
+  .stat:hover,
+  .sample:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--elev-2);
+  }
+
+  .btn-primary:hover,
+  .btn-success:hover {
+    filter: brightness(1.06);
+  }
+}
+
+/* ---------------- navigation indicators ---------------- */
+
+.tabbar-item {
+  position: relative;
+}
+
+/* A short bar slides in over the active tab — the cheapest possible way
+   to show "you are here" without another block of colour. */
+.tabbar-item::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: 3px;
+  width: 0;
+  border-radius: 0 0 999px 999px;
+  background: var(--primary);
+  transform: translateX(-50%);
+  transition: width var(--dur) var(--ease-out);
+}
+
+.tabbar-item[aria-current='true']::after {
+  width: 30px;
+}
+
+.tabbar-item[aria-current='true'] svg {
+  animation: mv-rise var(--dur) var(--ease-spring) backwards;
+}
+
+.rail-item {
+  position: relative;
+}
+
+.rail-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 0;
+  width: 4px;
+  border-radius: 999px;
+  background: var(--primary);
+  transform: translateY(-50%);
+  transition:
+    height var(--dur) var(--ease-out),
+    opacity var(--dur) var(--ease-out);
+  opacity: 0;
+}
+
+.rail-item[aria-current='true']::before {
+  height: 60%;
+  opacity: 1;
+}
+
+/* ---------------- overlays ---------------- */
+
+.overlay {
+  animation: mv-fade var(--dur) ease backwards;
+  backdrop-filter: blur(5px) saturate(120%);
+  -webkit-backdrop-filter: blur(5px) saturate(120%);
+}
+
+.modal {
+  animation: mv-sheet var(--dur-slow) var(--ease-spring) backwards;
+}
+
+.toast {
+  animation: mv-toast var(--dur) var(--ease-spring) backwards;
+}
+
+/* ---------------- data visuals ---------------- */
+
+/* The line traces itself; `pathLength=1` normalises the dash maths so a
+   two-point chart and a thirty-point chart draw at the same speed. */
+.chart-line {
+  stroke-dasharray: 1;
+  animation: mv-draw var(--dur-chart) var(--ease-out) backwards;
+}
+
+.chart-area,
+.chart-band {
+  animation: mv-fade var(--dur-slow) var(--ease-out) backwards;
+  animation-delay: 180ms;
+}
+
+.chart-dot {
+  animation: mv-fade var(--dur) var(--ease-out) backwards;
+}
+
+.chart-bar {
+  transform-origin: bottom;
+  animation: mv-bar var(--dur-slow) var(--ease-out) backwards;
+}
+
+.ring-progress {
+  animation: mv-ring var(--dur-chart) var(--ease-out) backwards;
+}
+
+.meter > span {
+  animation: mv-meter var(--dur-slow) var(--ease-out) backwards;
+}
+
+/* ---------------- skeletons ---------------- */
+
+.skeleton {
+  border-radius: 14px;
+  background: linear-gradient(
+    90deg,
+    var(--surface-alt) 0%,
+    var(--border) 40%,
+    var(--surface-alt) 80%
+  );
+  background-size: 200% 100%;
+  animation: mv-shimmer 1.4s linear infinite;
+}
+
+.skeleton-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 18px;
+  width: 100%;
+}
+
+.skeleton-line {
+  height: 18px;
+}
+.skeleton-card {
+  height: 116px;
+}
+.skeleton-tile {
+  height: 92px;
+}
+
+/* ---------------- scrolling ---------------- */
+
+.page,
+.screen-body,
+.rail,
+.table-wrap {
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+
+.page::-webkit-scrollbar,
+.screen-body::-webkit-scrollbar,
+.rail::-webkit-scrollbar,
+.table-wrap::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.page::-webkit-scrollbar-thumb,
+.screen-body::-webkit-scrollbar-thumb,
+.rail::-webkit-scrollbar-thumb,
+.table-wrap::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+.page::-webkit-scrollbar-track,
+.screen-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---------------- the opt-out ---------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .overlay {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
